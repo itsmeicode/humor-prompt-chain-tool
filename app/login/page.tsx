@@ -24,13 +24,10 @@ function LoginForm() {
     setLoading(true);
     try {
       const supabase = createClient();
-      const next = searchParams.get("next") ?? "/admin";
-      const callbackUrl = new URL("/auth/callback", window.location.origin);
-      callbackUrl.searchParams.set("next", next);
       const { error: oauthError } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: callbackUrl.toString(),
+          redirectTo: `${window.location.origin}/auth/callback`,
           queryParams: { prompt: "select_account" },
         },
       });
