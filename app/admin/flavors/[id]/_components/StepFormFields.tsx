@@ -177,14 +177,15 @@ export function StepFormFields({
 
       <div className="sm:col-span-2">
         <label htmlFor={`${idPrefix}-llm_system_prompt`} className={labelClass}>
-          System prompt (optional)
+          System prompt
         </label>
         <textarea
           id={`${idPrefix}-llm_system_prompt`}
           name="llm_system_prompt"
+          required
           rows={3}
           defaultValue={d.llm_system_prompt ?? ""}
-          placeholder="Sets the model's role / behavior"
+          placeholder="Sets the model's role and output rules. The API rejects empty system prompts."
           disabled={disabled}
           className={inputClass}
         />
@@ -192,14 +193,15 @@ export function StepFormFields({
 
       <div className="sm:col-span-2">
         <label htmlFor={`${idPrefix}-llm_user_prompt`} className={labelClass}>
-          User prompt (optional)
+          User prompt
         </label>
         <textarea
           id={`${idPrefix}-llm_user_prompt`}
           name="llm_user_prompt"
+          required
           rows={4}
           defaultValue={d.llm_user_prompt ?? ""}
-          placeholder="The instruction for this step"
+          placeholder="The instruction for this step. The API rejects empty user prompts."
           disabled={disabled}
           className={inputClass}
         />

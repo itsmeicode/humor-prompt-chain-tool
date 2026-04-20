@@ -68,6 +68,11 @@ function buildStepBody(fd: FormData): StepBody | { error: string } {
   if (outputTypeId == null) return { error: "Output type is required" };
   if (modelId == null) return { error: "Model is required" };
 
+  const systemPrompt = readString(fd, "llm_system_prompt");
+  const userPrompt = readString(fd, "llm_user_prompt");
+  if (!systemPrompt) return { error: "System prompt is required" };
+  if (!userPrompt) return { error: "User prompt is required" };
+
   return {
     description: readNullableString(fd, "description"),
     humor_flavor_step_type_id: stepTypeId,
@@ -75,8 +80,8 @@ function buildStepBody(fd: FormData): StepBody | { error: string } {
     llm_output_type_id: outputTypeId,
     llm_model_id: modelId,
     llm_temperature: readNumber(fd, "llm_temperature"),
-    llm_system_prompt: readNullableString(fd, "llm_system_prompt"),
-    llm_user_prompt: readNullableString(fd, "llm_user_prompt"),
+    llm_system_prompt: systemPrompt,
+    llm_user_prompt: userPrompt,
   };
 }
 

@@ -90,11 +90,19 @@ export default async function FlavorDetailPage({
         >
           ← All flavors
         </Link>
-        <h1 className="mt-2 text-2xl font-semibold text-zinc-900 dark:text-zinc-50">
-          {flavorRes.data.slug || (
-            <span className="italic text-zinc-500">(no slug)</span>
-          )}
-        </h1>
+        <div className="mt-2 flex flex-wrap items-center justify-between gap-3">
+          <h1 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-50">
+            {flavorRes.data.slug || (
+              <span className="italic text-zinc-500">(no slug)</span>
+            )}
+          </h1>
+          <Link
+            href={`/admin/flavors/${flavorRes.data.id}/test`}
+            className="rounded-md bg-zinc-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-zinc-700 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-white"
+          >
+            Test flavor →
+          </Link>
+        </div>
         {flavorRes.data.description && (
           <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
             {flavorRes.data.description}
