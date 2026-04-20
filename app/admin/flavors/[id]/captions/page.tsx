@@ -73,7 +73,7 @@ export default async function FlavorCaptionsPage({
     redirect(`/admin/flavors/${id}/captions?p=${totalPages}`);
   }
 
-  const rows = (captions ?? []) as CaptionRow[];
+  const rows = (captions ?? []) as unknown as CaptionRow[];
   const grouped = groupByImage(rows);
 
   return (
