@@ -8,7 +8,7 @@ export default async function AdminFlavorsPage() {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("humor_flavors")
-    .select("id, name, created_datetime_utc")
+    .select("id, slug, description, created_datetime_utc")
     .order("created_datetime_utc", { ascending: false, nullsFirst: false })
     .order("id", { ascending: false });
 
@@ -48,7 +48,7 @@ export default async function AdminFlavorsPage() {
             <thead className="bg-zinc-50 text-left text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:bg-zinc-950 dark:text-zinc-400">
               <tr>
                 <th className="px-4 py-2">ID</th>
-                <th className="px-4 py-2">Name</th>
+                <th className="px-4 py-2">Slug / Description</th>
                 <th className="px-4 py-2 text-right">Actions</th>
               </tr>
             </thead>

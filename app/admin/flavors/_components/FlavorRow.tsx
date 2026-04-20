@@ -2,17 +2,19 @@
 
 import Link from "next/link";
 import { useState, useTransition } from "react";
-import { deleteFlavor, renameFlavor } from "../actions";
+import { deleteFlavor, updateFlavor } from "../actions";
 
 export type FlavorRowData = {
   id: string | number;
-  name: string;
+  slug: string;
+  description: string | null;
   created_datetime_utc?: string | null;
 };
 
 export function FlavorRow({ flavor }: { flavor: FlavorRowData }) {
   const [editing, setEditing] = useState(false);
-  const [name, setName] = useState(flavor.name ?? "");
+  const [slug, setSlug] = useState(flavor.slug ?? "");
+  const [description, setDescription] = useState(flavor.description ?? "");
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
@@ -20,16 +22,21 @@ export function FlavorRow({ flavor }: { flavor: FlavorRowData }) {
     setError(null);
     const fd = new FormData();
     fd.set("id", String(flavor.id));
-    fd.set("name", name);
+    fd.set("slug", slug);
+    fd.set("description", description);
     startTransition(async () => {
-      const res = await renameFlavor(fd);
+      const res = await updateFlavor(fd);
       if (res.error) setError(res.error);
       else setEditing(false);
     });
   }
 
   function onDelete() {
-    if (!confirm(`Delete "${flavor.name}"? This also deletes all of its steps.`)) {
+    if (
+      !confirm(
+        `Delete flavor "${flavor.slug}"? This also deletes all of its steps.`
+      )
+    ) {
       return;
     }
     setError(null);
@@ -42,26 +49,46 @@ export function FlavorRow({ flavor }: { flavor: FlavorRowData }) {
   }
 
   return (
-    <tr className="border-t border-zinc-200 dark:border-zinc-800">
+    <tr className="border-t border-zinc-200 align-top dark:border-zinc-800">
       <td className="px-4 py-3 text-sm text-zinc-500 dark:text-zinc-400">
         {String(flavor.id)}
       </td>
       <td className="px-4 py-3">
         {editing ? (
-          <input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            disabled={pending}
-            autoFocus
-            className="w-full rounded-md border border-zinc-300 bg-white px-2 py-1 text-sm text-zinc-900 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
-          />
+          <div className="flex flex-col gap-2">
+            <input
+              value={slug}
+              onChange={(e) => setSlug(e.target.value)}
+              disabled={pending}
+              autoFocus
+              placeholder="slug"
+              className="w-full rounded-md border border-zinc-300 bg-white px-2 py-1 text-sm text-zinc-900 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
+            />
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              disabled={pending}
+              rows={2}
+              placeholder="description (optional)"
+              className="w-full rounded-md border border-zinc-300 bg-white px-2 py-1 text-sm text-zinc-700 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300"
+            />
+          </div>
         ) : (
-          <Link
-            href={`/admin/flavors/${flavor.id}`}
-            className="text-sm font-medium text-zinc-900 hover:underline dark:text-zinc-100"
-          >
-            {flavor.name || <span className="italic text-zinc-500">(unnamed)</span>}
-          </Link>
+          <div>
+            <Link
+              href={`/admin/flavors/${flavor.id}`}
+              className="text-sm font-medium text-zinc-900 hover:underline dark:text-zinc-100"
+            >
+              {flavor.slug || (
+                <span className="italic text-zinc-500">(no slug)</span>
+              )}
+            </Link>
+            {flavor.description && (
+              <p className="mt-1 text-xs text-zinc-600 dark:text-zinc-400">
+                {flavor.description}
+              </p>
+            )}
+          </div>
         )}
         {error && (
           <p className="mt-1 text-xs text-red-700 dark:text-red-300">{error}</p>
@@ -82,7 +109,8 @@ export function FlavorRow({ flavor }: { flavor: FlavorRowData }) {
               type="button"
               onClick={() => {
                 setEditing(false);
-                setName(flavor.name ?? "");
+                setSlug(flavor.slug ?? "");
+                setDescription(flavor.description ?? "");
                 setError(null);
               }}
               disabled={pending}
@@ -99,7 +127,7 @@ export function FlavorRow({ flavor }: { flavor: FlavorRowData }) {
               disabled={pending}
               className="rounded-md border border-zinc-300 px-3 py-1 text-xs text-zinc-700 hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800"
             >
-              Rename
+              Edit
             </button>
             <button
               type="button"

@@ -28,31 +28,46 @@ async function requireAdmin() {
   if (!profile.is_superadmin && !profile.is_matrix_admin) {
     redirect("/access-denied?reason=not_admin");
   }
-  return supabase;
+  return { supabase, userId: user.id };
 }
 
 export async function createFlavor(formData: FormData) {
-  const name = String(formData.get("name") ?? "").trim();
-  if (!name) return { error: "Name is required" };
+  const slug = String(formData.get("slug") ?? "").trim();
+  const descriptionRaw = String(formData.get("description") ?? "").trim();
+  if (!slug) return { error: "Slug is required" };
 
-  const supabase = await requireAdmin();
-  const { error } = await supabase.from("humor_flavors").insert({ name });
+  const { supabase, userId } = await requireAdmin();
+  const now = new Date().toISOString();
+  const { error } = await supabase.from("humor_flavors").insert({
+    slug,
+    description: descriptionRaw || null,
+    created_by_user_id: userId,
+    modified_by_user_id: userId,
+    created_datetime_utc: now,
+    modified_datetime_utc: now,
+  });
   if (error) return { error: error.message };
 
   revalidatePath("/admin/flavors");
   return { error: null };
 }
 
-export async function renameFlavor(formData: FormData) {
+export async function updateFlavor(formData: FormData) {
   const id = formData.get("id");
-  const name = String(formData.get("name") ?? "").trim();
+  const slug = String(formData.get("slug") ?? "").trim();
+  const descriptionRaw = String(formData.get("description") ?? "").trim();
   if (id == null || id === "") return { error: "Missing id" };
-  if (!name) return { error: "Name is required" };
+  if (!slug) return { error: "Slug is required" };
 
-  const supabase = await requireAdmin();
+  const { supabase, userId } = await requireAdmin();
   const { error } = await supabase
     .from("humor_flavors")
-    .update({ name })
+    .update({
+      slug,
+      description: descriptionRaw || null,
+      modified_by_user_id: userId,
+      modified_datetime_utc: new Date().toISOString(),
+    })
     .eq("id", id);
   if (error) return { error: error.message };
 
@@ -64,7 +79,7 @@ export async function deleteFlavor(formData: FormData) {
   const id = formData.get("id");
   if (id == null || id === "") return { error: "Missing id" };
 
-  const supabase = await requireAdmin();
+  const { supabase } = await requireAdmin();
   const { error } = await supabase
     .from("humor_flavors")
     .delete()
