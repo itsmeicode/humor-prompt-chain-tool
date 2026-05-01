@@ -84,10 +84,10 @@ export default async function AdminFlavorsPage({
 
           {totalPages > 1 && (
             <div className="mt-4 flex items-center justify-between text-xs text-zinc-500 dark:text-zinc-400">
-              <span className="flex-1">
+              <span>
                 Page {page} of {totalPages} · {total} total
               </span>
-              <div className="flex flex-1 justify-center gap-2">
+              <div className="flex gap-2">
                 {page > 1 ? (
                   <Link
                     href={`/admin/flavors?p=${page - 1}`}
@@ -113,7 +113,6 @@ export default async function AdminFlavorsPage({
                   </span>
                 )}
               </div>
-              <span className="flex-1" />
             </div>
           )}
         </>
