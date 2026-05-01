@@ -77,7 +77,7 @@ export function FlavorRow({ flavor }: { flavor: FlavorRowData }) {
           <div>
             <Link
               href={`/admin/flavors/${flavor.id}`}
-              className="text-sm font-medium text-zinc-900 hover:underline dark:text-zinc-100"
+              className="text-sm font-medium text-zinc-900 underline underline-offset-2 hover:text-zinc-600 dark:text-zinc-100 dark:hover:text-zinc-300"
             >
               {flavor.slug || (
                 <span className="italic text-zinc-500">(no slug)</span>

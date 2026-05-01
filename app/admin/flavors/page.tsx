@@ -1,16 +1,37 @@
+import Link from "next/link";
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { CreateFlavorForm } from "./_components/CreateFlavorForm";
 import { FlavorRow, type FlavorRowData } from "./_components/FlavorRow";
 
 export const dynamic = "force-dynamic";
 
-export default async function AdminFlavorsPage() {
+const PAGE_SIZE = 15;
+
+export default async function AdminFlavorsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ p?: string }>;
+}) {
+  const sp = await searchParams;
+  const pageRaw = parseInt(sp.p ?? "1", 10);
+  const page = Number.isFinite(pageRaw) && pageRaw >= 1 ? pageRaw : 1;
+
   const supabase = await createClient();
-  const { data, error } = await supabase
+  const from = (page - 1) * PAGE_SIZE;
+  const to = page * PAGE_SIZE - 1;
+  const { data, error, count } = await supabase
     .from("humor_flavors")
-    .select("id, slug, description, created_datetime_utc")
+    .select("id, slug, description, created_datetime_utc", { count: "exact" })
     .order("created_datetime_utc", { ascending: false, nullsFirst: false })
-    .order("id", { ascending: false });
+    .order("id", { ascending: false })
+    .range(from, to);
+
+  const total = count ?? 0;
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  if (page > totalPages && total > 0) {
+    redirect(`/admin/flavors?p=${totalPages}`);
+  }
 
   const flavors = (data ?? []) as FlavorRowData[];
 
@@ -43,22 +64,59 @@ export default async function AdminFlavorsPage() {
       )}
 
       {!error && flavors.length > 0 && (
-        <div className="overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
-          <table className="w-full">
-            <thead className="bg-zinc-50 text-left text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:bg-zinc-950 dark:text-zinc-400">
-              <tr>
-                <th className="px-4 py-2">ID</th>
-                <th className="px-4 py-2">Slug / Description</th>
-                <th className="px-4 py-2 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {flavors.map((f) => (
-                <FlavorRow key={String(f.id)} flavor={f} />
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <>
+          <div className="overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+            <table className="w-full">
+              <thead className="bg-zinc-50 text-left text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:bg-zinc-950 dark:text-zinc-400">
+                <tr>
+                  <th className="px-4 py-2">ID</th>
+                  <th className="px-4 py-2">Slug / Description</th>
+                  <th className="px-4 py-2 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {flavors.map((f) => (
+                  <FlavorRow key={String(f.id)} flavor={f} />
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {totalPages > 1 && (
+            <div className="mt-4 flex items-center justify-between text-xs text-zinc-500 dark:text-zinc-400">
+              <span className="flex-1">
+                Page {page} of {totalPages} · {total} total
+              </span>
+              <div className="flex flex-1 justify-center gap-2">
+                {page > 1 ? (
+                  <Link
+                    href={`/admin/flavors?p=${page - 1}`}
+                    className="rounded-md border border-zinc-300 px-2 py-1 hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-800"
+                  >
+                    ← Prev
+                  </Link>
+                ) : (
+                  <span className="rounded-md border border-zinc-200 px-2 py-1 opacity-40 dark:border-zinc-800">
+                    ← Prev
+                  </span>
+                )}
+                {page < totalPages ? (
+                  <Link
+                    href={`/admin/flavors?p=${page + 1}`}
+                    className="rounded-md border border-zinc-300 px-2 py-1 hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-800"
+                  >
+                    Next →
+                  </Link>
+                ) : (
+                  <span className="rounded-md border border-zinc-200 px-2 py-1 opacity-40 dark:border-zinc-800">
+                    Next →
+                  </span>
+                )}
+              </div>
+              <span className="flex-1" />
+            </div>
+          )}
+        </>
       )}
     </div>
   );
