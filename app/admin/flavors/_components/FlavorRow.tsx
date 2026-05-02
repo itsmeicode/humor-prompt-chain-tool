@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
-import { deleteFlavor, updateFlavor } from "../actions";
+import { deleteFlavor, duplicateFlavor, updateFlavor } from "../actions";
 
 export type FlavorRowData = {
   id: string | number;
@@ -12,6 +13,7 @@ export type FlavorRowData = {
 };
 
 export function FlavorRow({ flavor }: { flavor: FlavorRowData }) {
+  const router = useRouter();
   const [editing, setEditing] = useState(false);
   const [slug, setSlug] = useState(flavor.slug ?? "");
   const [description, setDescription] = useState(flavor.description ?? "");
@@ -46,6 +48,43 @@ export function FlavorRow({ flavor }: { flavor: FlavorRowData }) {
       const res = await deleteFlavor(fd);
       if (res.error) setError(res.error);
     });
+  }
+
+  function attemptDuplicate(suggested: string, message: string) {
+    const newSlug = window.prompt(message, suggested);
+    if (newSlug == null) return;
+    const trimmed = newSlug.trim();
+    if (!trimmed) {
+      setError("Slug is required");
+      return;
+    }
+    setError(null);
+    const fd = new FormData();
+    fd.set("id", String(flavor.id));
+    fd.set("new_slug", trimmed);
+    startTransition(async () => {
+      const res = await duplicateFlavor(fd);
+      if (res.error) {
+        setError(res.error);
+        if ((res as { duplicate?: boolean }).duplicate) {
+          attemptDuplicate(
+            trimmed,
+            `Slug "${trimmed}" is already taken. Try another:`
+          );
+        }
+        return;
+      }
+      if (res.newId != null) {
+        router.push(`/admin/flavors/${res.newId}`);
+      }
+    });
+  }
+
+  function onDuplicate() {
+    attemptDuplicate(
+      `${flavor.slug}-copy`,
+      `Duplicate "${flavor.slug}" — enter a unique slug for the copy:`
+    );
   }
 
   return (
@@ -128,6 +167,14 @@ export function FlavorRow({ flavor }: { flavor: FlavorRowData }) {
               className="rounded-md border border-zinc-300 px-3 py-1 text-xs text-zinc-700 hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800"
             >
               Edit
+            </button>
+            <button
+              type="button"
+              onClick={onDuplicate}
+              disabled={pending}
+              className="rounded-md border border-zinc-300 px-3 py-1 text-xs text-zinc-700 hover:bg-zinc-100 disabled:opacity-60 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800"
+            >
+              {pending ? "…" : "Duplicate"}
             </button>
             <button
               type="button"
